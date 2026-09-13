@@ -96,11 +96,26 @@ def extract_slots(payload: Any) -> list[dict[str, Any]]:
 
 
 def check_date(session: requests.Session, facility_id: str, day: str) -> tuple[list[dict[str, Any]], Any]:
-    url = f"{BASE_URL}/api/timedentry/availability/facility/{facility_id}"
-    response = session.get(url, params={"date": day}, timeout=TIMEOUT_SECONDS)
-    response.raise_for_status()
-    payload = response.json()
-    return extract_slots(payload), payload
+    # Mammoth Cave and other /ticket/facility resources use the ticket API.
+    # Some timed-entry facilities use /api/timedentry instead, so try the
+    # ticket endpoint first and fall back to timedentry if needed.
+    endpoints = [
+        f"{BASE_URL}/api/ticket/availability/facility/{facility_id}",
+        f"{BASE_URL}/api/timedentry/availability/facility/{facility_id}",
+    ]
+    last_payload = None
+    for url in endpoints:
+        response = session.get(url, params={"date": day}, timeout=TIMEOUT_SECONDS)
+        response.raise_for_status()
+        payload = response.json()
+        last_payload = payload
+        slots = extract_slots(payload)
+        if slots:
+            return slots, payload
+        # An empty list often means this facility belongs to the other API family.
+        if payload not in ([], {}, None):
+            return slots, payload
+    return [], last_payload
 
 
 def main() -> int:
