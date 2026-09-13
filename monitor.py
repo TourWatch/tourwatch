@@ -66,13 +66,17 @@ def send_email(subject:str, body:str)->bool:
 
 def main()->int:
  cfg=json.loads(CONFIG_PATH.read_text()); old={}
+ # Accept both the original single-watch watches.json format and the newer {"watches": [...]} format.
+ watches = cfg.get('watches') if isinstance(cfg, dict) else None
+ if not isinstance(watches, list):
+  watches = [cfg] if isinstance(cfg, dict) and cfg.get('facility_id') else []
  if STATE_PATH.exists():
   try: old=json.loads(STATE_PATH.read_text())
   except Exception: old={}
  session=requests.Session(); session.headers.update({'User-Agent':'TourWatch/0.3 (+https://github.com/TourWatch/tourwatch; read-only availability checker)','Accept':'application/json'})
  current={}; details={}
  print('TourWatch V3:',datetime.now().astimezone().isoformat(timespec='seconds'))
- for wi,w in enumerate(cfg.get('watches',[])):
+ for wi,w in enumerate(watches):
   facility=str(w['facility_id']); party=int(w.get('party_size',1)); needle=str(w.get('tour_name_contains','')).lower().strip()
   for day in daterange(w['start_date'],w.get('end_date',w['start_date'])):
    for s in check_date(session,facility,day):
