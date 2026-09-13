@@ -1,9 +1,9 @@
 name: Check tour availability
 
-on:
+'on':
   workflow_dispatch:
     inputs:
-    search_term:
+      search_term:
         description: 'Search Recreation.gov attractions'
         required: false
         type: string
