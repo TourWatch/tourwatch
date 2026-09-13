@@ -23,7 +23,25 @@ for facility in facilities:
     print(f"{facility.get('FacilityName')} | ID: {facility.get('FacilityID')}")
 
 # Select the top RIDB search result for this test.
-target = facilities[0] if facilities else None
+target = None
+target_tours = []
+
+for facility in facilities:
+    candidate_id = facility.get("FacilityID")
+
+    response = requests.get(
+        f"{BASE}/facilities/{candidate_id}/tours",
+        headers=HEADERS,
+        timeout=20
+    )
+    response.raise_for_status()
+
+    candidate_tours = response.json().get("RECDATA", [])
+
+    if candidate_tours:
+        target = facility
+        target_tours = candidate_tours
+        break
 
 if not target:
     raise RuntimeError(f"No facilities found for: {search_term}")
@@ -36,14 +54,7 @@ print()
 print("Tours attached to this facility:")
 
 # Ask RIDB which tours belong to the selected facility.
-response = requests.get(
-    f"{BASE}/facilities/{facility_id}/tours",
-    headers=HEADERS,
-    timeout=20
-)
-response.raise_for_status()
-
-tours = response.json().get("RECDATA", [])
+tours = target_tours
 
 for tour in tours:
     print(
