@@ -3,6 +3,11 @@ name: Check tour availability
 on:
   workflow_dispatch:
     inputs:
+    search_term:
+        description: 'Search Recreation.gov attractions'
+        required: false
+        type: string
+        default: 'Mammoth Cave'
       test_email:
         description: 'Send a test email even if nothing new opened'
         required: false
@@ -32,6 +37,7 @@ jobs:
       - name: Test RIDB discovery
         env:
           RIDB_API_KEY: ${{ secrets.RIDB_API_KEY }}
+          SEARCH_TERM: ${{ inputs.search_term }}
         run: python discover.py
       - name: Run TourWatch
         env:
