@@ -5,7 +5,7 @@ API_KEY = os.environ["RIDB_API_KEY"]
 HEADERS = {"apikey": API_KEY}
 BASE = "https://ridb.recreation.gov/api/v1"
 
-search_term = "Mammoth Cave"
+search_term = os.getenv("SEARCH_TERM", "Mammoth Cave").strip() or "Mammoth Cave"
 
 # Search for facilities
 response = requests.get(
@@ -22,18 +22,11 @@ print(f"RIDB search results for: {search_term}\n")
 for facility in facilities:
     print(f"{facility.get('FacilityName')} | ID: {facility.get('FacilityID')}")
 
-# For this test, automatically find the Mammoth Cave tour facility.
-target = next(
-    (
-        facility for facility in facilities
-        if "MAMMOTH CAVE NATIONAL PARK TOURS"
-        in facility.get("FacilityName", "").upper()
-    ),
-    None
-)
+# Select the top RIDB search result for this test.
+target = facilities[0] if facilities else None
 
 if not target:
-    raise RuntimeError("Could not find Mammoth Cave tour facility")
+    raise RuntimeError(f"No facilities found for: {search_term}")
 
 facility_id = target["FacilityID"]
 
