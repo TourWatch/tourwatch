@@ -29,6 +29,10 @@ jobs:
           python-version: '3.12'
       - name: Install dependencies
         run: pip install -r requirements.txt
+      - name: Test RIDB discovery
+        env:
+          RIDB_API_KEY: ${{ secrets.RIDB_API_KEY }}
+        run: python discover.py
       - name: Run TourWatch
         env:
           SMTP_HOST: smtp.gmail.com
